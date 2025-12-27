@@ -7,7 +7,7 @@ import { Dumbbell, Twitter, Instagram, Linkedin, Github } from "lucide-react";
 export function Footer() {
     return (
         <footer className="pt-32 pb-12 border-t bg-muted/40">
-            <div className="container px-4 md:px-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid md:grid-cols-12 gap-12 mb-20">
                     <div className="md:col-span-4 space-y-6">
                         <div className="flex items-center gap-2">

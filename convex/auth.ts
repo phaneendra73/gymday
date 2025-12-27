@@ -28,11 +28,13 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
   });
 };
 
+import { getProfile } from "./userProfile";
+
 // Example function for getting the current user
-// Feel free to edit, omit, etc.
+// This now returns the internal user profile (with roles)
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    return authComponent.getAuthUser(ctx);
+    return await getProfile(ctx);
   },
 });

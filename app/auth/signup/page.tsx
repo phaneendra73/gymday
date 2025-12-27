@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import z from "zod";
 import { toast } from "sonner";
-import { useRouter } from "next/Navigation";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 export default function SignupPage() {

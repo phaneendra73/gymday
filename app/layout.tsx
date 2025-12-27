@@ -11,8 +11,16 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "GymDay",
-  description: "Your daily gym booking companion",
+  title: {
+    default: "GymDay | The Ultimate Gym Day Pass",
+    template: "%s | GymDay",
+  },
+  description: "Access the highest-rated gyms in your city with a single day pass. No contracts, no hassle, just fitness. Your premium gym booking companion.",
+  keywords: ["gym", "fitness", "workout", "day pass", "gym membership", "GymDay", "flexible fitness"],
+  authors: [{ name: "GymDay Team" }],
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
@@ -24,9 +32,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${outfit.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <main className="w-full px-4 md:px-8">
-            <ConvexClientProvider>{children}</ConvexClientProvider>
-          </main>
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1 w-full">
+              <ConvexClientProvider>{children}</ConvexClientProvider>
+            </main>
+          </div>
           <Toaster />
         </ThemeProvider>
       </body>
