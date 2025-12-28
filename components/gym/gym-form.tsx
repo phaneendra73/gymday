@@ -6,8 +6,9 @@ import { gymSchema, GymFormValues } from "@/app/schemas/gym";
 import { Field, FieldLabel, FieldGroup, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Plus } from "lucide-react";
+import { Loader2, Save, Plus, MapPin } from "lucide-react";
 import { useEffect } from "react";
+import { extractCoordinates, getStaticMapUrl } from "@/lib/maps";
 
 interface GymFormProps {
     defaultValues?: Partial<GymFormValues>;
@@ -24,6 +25,7 @@ export function GymForm({ defaultValues, onSubmit, isPending, buttonLabel }: Gym
             description: "",
             address: "",
             location: { lat: 0, lng: 0 },
+            googleMapsUrl: "",
             ownerEmail: "",
             isActive: true,
             ...defaultValues,
@@ -125,39 +127,88 @@ export function GymForm({ defaultValues, onSubmit, isPending, buttonLabel }: Gym
                     )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4 p-4 rounded-xl border border-border/40 bg-muted/20">
                     <Controller
-                        name="location.lat"
+                        name="googleMapsUrl"
                         control={form.control}
                         render={({ field, fieldState }) => (
                             <Field className="space-y-1">
-                                <FieldLabel>Latitude</FieldLabel>
+                                <FieldLabel>Google Maps Link / Iframe Src</FieldLabel>
                                 <Input
-                                    type="number"
-                                    step="any"
+                                    placeholder="Paste Google Maps URL or iframe src here..."
                                     {...field}
+                                    onChange={(e) => {
+                                        field.onChange(e);
+                                        const coords = extractCoordinates(e.target.value);
+                                        if (coords) {
+                                            form.setValue("location.lat", coords.lat);
+                                            form.setValue("location.lng", coords.lng);
+                                        }
+                                    }}
                                     aria-invalid={fieldState.invalid}
                                 />
+                                <p className="text-[10px] text-muted-foreground">
+                                    We extract coordinates from: !3dLAT!4dLNG OR @LAT,LNG
+                                </p>
                                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                             </Field>
                         )}
                     />
-                    <Controller
-                        name="location.lng"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                            <Field className="space-y-1">
-                                <FieldLabel>Longitude</FieldLabel>
-                                <Input
-                                    type="number"
-                                    step="any"
-                                    {...field}
-                                    aria-invalid={fieldState.invalid}
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Controller
+                            name="location.lat"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field className="space-y-1">
+                                    <FieldLabel>Latitude</FieldLabel>
+                                    <Input
+                                        type="number"
+                                        step="any"
+                                        {...field}
+                                        readOnly
+                                        className="bg-muted"
+                                        aria-invalid={fieldState.invalid}
+                                    />
+                                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                                </Field>
+                            )}
+                        />
+                        <Controller
+                            name="location.lng"
+                            control={form.control}
+                            render={({ field, fieldState }) => (
+                                <Field className="space-y-1">
+                                    <FieldLabel>Longitude</FieldLabel>
+                                    <Input
+                                        type="number"
+                                        step="any"
+                                        {...field}
+                                        readOnly
+                                        className="bg-muted"
+                                        aria-invalid={fieldState.invalid}
+                                    />
+                                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                                </Field>
+                            )}
+                        />
+                    </div>
+
+                    {form.watch("location.lat") !== 0 && (
+                        <div className="space-y-2">
+                            <FieldLabel>Map Preview (OpenStreetMap)</FieldLabel>
+                            <div className="relative aspect-video rounded-lg overflow-hidden border border-border/40">
+                                <img
+                                    src={getStaticMapUrl(form.watch("location.lat"), form.watch("location.lng"))}
+                                    alt="Map Preview"
+                                    className="w-full h-full object-cover"
                                 />
-                                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                            </Field>
-                        )}
-                    />
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <MapPin className="h-8 w-8 text-primary drop-shadow-md" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <Controller

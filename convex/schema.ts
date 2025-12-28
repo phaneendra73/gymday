@@ -25,8 +25,12 @@ export default defineSchema({
       lng: v.number(),
     }),
 
-    image: v.optional(v.string()), // Added for detail page visual
+    image: v.optional(v.string()), // URL for external images
+    imageStorageId: v.optional(v.id("_storage")), // Convex file storage
     passPrice: v.optional(v.number()), // Price in cents
+    googleMapsUrl: v.optional(v.string()), // For opening Google Maps
+    rating: v.optional(v.number()), // Average rating (0-5)
+    totalRatings: v.optional(v.number()), // Number of ratings
 
     isActive: v.boolean(),
     createdAt: v.number(),
@@ -39,6 +43,7 @@ export default defineSchema({
     gymId: v.id("gyms"),
 
     bookingDay: v.string(), // Format "YYYY-MM-DD"
+    priceCents: v.optional(v.number()), // Snapshot of price at booking time
     status: v.union(
       v.literal("booked"),
       v.literal("checked-in"),

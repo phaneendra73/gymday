@@ -46,6 +46,27 @@ export async function requireUserProfile(
     });
 
     profile = await ctx.db.get(profileId);
+
+    // If this user was pre-assigned as an owner via email, link gyms and set owner flag
+    const email = identity.email?.toLowerCase();
+    if (email && profile) {
+      const pendingOwnerGyms = await ctx.db
+        .query("gyms")
+        .withIndex("by_ownerEmail", (q) => q.eq("ownerEmail", email))
+        .collect();
+
+      if (pendingOwnerGyms.length > 0) {
+        // Mark user as a gym owner
+        await ctx.db.patch(profile._id, { isGYMOwner: true });
+
+        // Link all gyms that were assigned by email to this new profile
+        for (const gym of pendingOwnerGyms) {
+          await ctx.db.patch(gym._id, { ownerId: profile._id, ownerEmail: email });
+        }
+        // Refresh profile after patch
+        profile = await ctx.db.get(profile._id);
+      }
+    }
   }
 
   if (!profile) {
@@ -58,6 +79,42 @@ export async function requireUserProfile(
 export const initProfile = mutation({
   args: {},
   handler: async (ctx: MutationCtx) => {
-    return await requireUserProfile(ctx);
+    // Ensure profile exists
+    let profile = await requireUserProfile(ctx);
+
+    // Reconcile ownership: if any gyms were assigned via email, link them now
+    const email = profile.email?.toLowerCase();
+    if (email) {
+      const pendingOwnerGyms = await ctx.db
+        .query("gyms")
+        .withIndex("by_ownerEmail", (q) => q.eq("ownerEmail", email))
+        .collect();
+
+      // Link gyms missing ownerId or linked to a different profile
+      const toLink = pendingOwnerGyms.filter(
+        (g) => !g.ownerId || g.ownerId !== profile._id
+      );
+
+      if (toLink.length > 0) {
+        // Set owner flag on the profile
+        await ctx.db.patch(profile._id, { isGYMOwner: true });
+        for (const gym of toLink) {
+          await ctx.db.patch(gym._id, { ownerId: profile._id, ownerEmail: email });
+        }
+        profile = (await ctx.db.get(profile._id))!;
+      }
+    }
+
+    // If no email-assigned gyms were found/linked, but gyms already reference this profile, mark as owner
+    const ownedGyms = await ctx.db
+      .query("gyms")
+      .withIndex("by_owner", (q) => q.eq("ownerId", profile._id))
+      .collect();
+    if (ownedGyms.length > 0 && !profile.isGYMOwner) {
+      await ctx.db.patch(profile._id, { isGYMOwner: true });
+      profile = (await ctx.db.get(profile._id))!;
+    }
+
+    return profile;
   },
 });

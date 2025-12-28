@@ -10,19 +10,25 @@ import { format } from "date-fns";
 import { Doc } from "@/convex/_generated/dataModel";
 
 import { Badge } from "@/components/ui/badge";
+import { authClient } from "@/lib/auth-client";
+import { formatINR } from "@/lib/utils";
 
 export default function OwnerDashboardPage() {
+    const { data: session } = authClient.useSession();
     const myGyms = useQuery(api.gyms.listMyGyms);
+    const ownerStats = useQuery(api.bookings.ownerTodayStats);
 
-    if (myGyms === undefined) {
+    // Show loading until session and query state settle
+    if (session === undefined || myGyms === undefined) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
             </div>
         );
     }
-
-    if (myGyms.length === 0) {
+console.log(session, myGyms);
+    // If logged out or not an owner, show guidance
+    if (!session?.user || myGyms.length === 0) {
         return (
             <div className="container py-20 text-center space-y-4">
                 <h1 className="text-3xl font-bold">No Gyms Found</h1>
@@ -46,7 +52,7 @@ export default function OwnerDashboardPage() {
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase tracking-wider opacity-60">Total Passes Today</p>
-                            <p className="text-3xl font-black">24</p>
+                            <p className="text-3xl font-black">{ownerStats?.totalToday ?? 0}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -57,7 +63,7 @@ export default function OwnerDashboardPage() {
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase tracking-wider opacity-60">Checked In</p>
-                            <p className="text-3xl font-black">18</p>
+                            <p className="text-3xl font-black">{ownerStats?.checkedInToday ?? 0}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -68,7 +74,7 @@ export default function OwnerDashboardPage() {
                         </div>
                         <div>
                             <p className="text-xs font-bold uppercase tracking-wider opacity-60">Est. Payout</p>
-                            <p className="text-3xl font-black">₹4,800</p>
+                            <p className="text-3xl font-black">{formatINR(ownerStats?.payoutCents ?? 0)}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -87,12 +93,13 @@ function GymManagementSection({ gym }: { gym: Doc<"gyms"> }) {
     const bookings = useQuery(api.bookings.listGymBookings, { gymId: gym._id });
     const checkIn = useMutation(api.bookings.checkIn);
 
-    const handleCheckIn = async (id: any) => {
+    const handleCheckIn = async (id: Doc<"bookings">["_id"]) => {
         try {
             await checkIn({ bookingId: id });
             toast.success("User checked in successfully!");
-        } catch (e: any) {
-            toast.error(e.message || "Failed to check in");
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (er) {
+            toast.error("Failed to check in");
         }
     };
 
@@ -116,7 +123,7 @@ function GymManagementSection({ gym }: { gym: Doc<"gyms"> }) {
             <CardContent className="p-0">
                 <div className="p-6 bg-primary/5 flex items-center justify-between">
                     <h3 className="font-bold flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-primary" /> Today's Check-ins
+                        <Activity className="h-4 w-4 text-primary" /> Today&#39;s Check-ins
                     </h3>
                     <span className="text-xs font-medium text-muted-foreground">{format(new Date(), "MMMM dd, yyyy")}</span>
                 </div>
@@ -140,7 +147,7 @@ function GymManagementSection({ gym }: { gym: Doc<"gyms"> }) {
                                 </div>
 
                                 <div className="flex items-center gap-6">
-                                    <div className="text-right hidden sm:block font-mono text-xs">
+                                    <div className="text-right font-mono text-xs md:text-sm">
                                         <p className="text-muted-foreground uppercase opacity-60">ID</p>
                                         <p>#{booking._id.slice(-6).toUpperCase()}</p>
                                     </div>
@@ -150,7 +157,7 @@ function GymManagementSection({ gym }: { gym: Doc<"gyms"> }) {
                                             <QrCode className="h-4 w-4" /> MARK CHECKED-IN
                                         </Button>
                                     ) : (
-                                        <div className="flex items-center gap-2 text-secondary font-bold text-sm bg-secondary/10 px-4 py-2 rounded-xl border border-secondary/20">
+                                        <div className="flex items-center gap-2 text-secondary-foreground font-bold text-sm bg-secondary px-4 py-2 rounded-xl border border-secondary/20">
                                             <CheckCircle2 className="h-4 w-4" /> CHECKED IN
                                         </div>
                                     )}

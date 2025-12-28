@@ -23,6 +23,9 @@ export default function NewGymPage() {
                 await createGym({
                     ...data,
                     ownerEmail: data.ownerEmail || undefined,
+                    googleMapsUrl: data.googleMapsUrl || undefined,
+                    image: data.image || undefined,
+                    description: data.description || undefined,
                 });
                 toast.success("Gym created successfully");
                 router.push("/admin/gyms");

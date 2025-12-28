@@ -55,10 +55,19 @@ export const createGym = mutation({
     }),
     ownerEmail: v.optional(v.string()),
     image: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
     passPrice: v.optional(v.number()),
+    googleMapsUrl: v.optional(v.string()),
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    // Validate coordinates
+    if (args.location.lat < -90 || args.location.lat > 90) {
+      throw new Error("Latitude must be between -90 and 90");
+    }
+    if (args.location.lng < -180 || args.location.lng > 180) {
+      throw new Error("Longitude must be between -180 and 180");
+    }
     const user = await requireUserProfile(ctx);
     if (!user.isAdmin) {
       throw new Error("Unauthorized");
@@ -101,10 +110,20 @@ export const updateGym = mutation({
     }),
     ownerEmail: v.optional(v.string()),
     image: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
     passPrice: v.optional(v.number()),
+    googleMapsUrl: v.optional(v.string()),
     isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    // Validate coordinates
+    if (args.location.lat < -90 || args.location.lat > 90) {
+      throw new Error("Latitude must be between -90 and 90");
+    }
+    if (args.location.lng < -180 || args.location.lng > 180) {
+      throw new Error("Longitude must be between -180 and 180");
+    }
+
     const user = await requireUserProfile(ctx);
     const gym = await ctx.db.get(args.gymId);
     if (!gym) throw new Error("Gym not found");

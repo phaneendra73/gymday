@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { Menu, Dumbbell, X, Ticket, LayoutDashboard, Settings, User } from "lucide-react";
+import { Menu, Dumbbell, X, Ticket, LayoutDashboard, Settings } from "lucide-react";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/web/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,8 @@ export function Navbar() {
     const initProfile = useMutation(api.userProfile.initProfile);
 
     useEffect(() => {
-        if (session?.user && userProfile === null) {
+        // Ensure a profile exists and reconcile owner linkage if needed
+        if (session?.user && (userProfile === null || userProfile?.isGYMOwner === false)) {
             initProfile();
         }
     }, [session, userProfile, initProfile]);
@@ -38,8 +39,10 @@ export function Navbar() {
         navLinks.push({ name: "Owner", href: "/owner/dashboard", icon: LayoutDashboard });
     }
 
+    const isNavLoading = session === undefined || (session?.user && userProfile === undefined);
+
     return (
-        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
                     {/* Logo */}
@@ -54,7 +57,13 @@ export function Navbar() {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-2">
-                        {navLinks.map((link) => (
+                        {isNavLoading ? (
+                            <div className="flex items-center gap-2 animate-pulse">
+                                <div className="h-8 w-20 bg-muted/30 rounded-md" />
+                                <div className="h-8 w-24 bg-muted/30 rounded-md" />
+                            </div>
+                        ) : (
+                            navLinks.map((link) => (
                             <Link
                                 key={link.name}
                                 href={link.href}
@@ -66,7 +75,8 @@ export function Navbar() {
                                 {link.icon && <link.icon className="h-4 w-4" />}
                                 {link.name}
                             </Link>
-                        ))}
+                        ))
+                        )}
                     </nav>
 
                     {/* Desktop Buttons */}

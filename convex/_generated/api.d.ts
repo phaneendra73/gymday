@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as bookings from "../bookings.js";
+import type * as files from "../files.js";
 import type * as gyms from "../gyms.js";
 import type * as http from "../http.js";
 import type * as userProfile from "../userProfile.js";
@@ -23,6 +24,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   bookings: typeof bookings;
+  files: typeof files;
   gyms: typeof gyms;
   http: typeof http;
   userProfile: typeof userProfile;

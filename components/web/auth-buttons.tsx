@@ -17,10 +17,19 @@ interface AuthButtonsProps {
 export function AuthButtons({ onItemClick, className }: AuthButtonsProps) {
     const { isAuthenticated, isLoading } = useConvexAuth();
     const router = useRouter();
-    if (isLoading) return <div className="w-24 h-10" />;
+    
+    if (isLoading) {
+        return (
+            <div className="flex items-center gap-4 animate-pulse">
+                <div className="hidden md:block w-16 h-10 bg-muted/30 rounded-xl" />
+                <div className="w-24 h-10 bg-primary/10 rounded-xl" />
+            </div>
+        );
+    }
 
     if (isAuthenticated) {
         return (
+            <div className="animate-in fade-in duration-300">
             <Button
                 variant="outline"
                 size="sm"
@@ -47,11 +56,12 @@ export function AuthButtons({ onItemClick, className }: AuthButtonsProps) {
                 <LogOut className="h-4 w-4" />
                 Log Out
             </Button>
+            </div>
         );
     }
 
     return (
-        <div className={cn("flex flex-col md:flex-row items-center gap-3 md:gap-4 w-full md:w-auto", className)}>
+        <div className={cn("flex flex-col md:flex-row items-center gap-3 md:gap-4 w-full md:w-auto animate-in fade-in duration-300", className)}>
             <Link
                 href="/auth/login"
                 onClick={onItemClick}

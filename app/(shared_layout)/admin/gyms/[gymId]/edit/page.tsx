@@ -28,6 +28,9 @@ export default function EditGymPage() {
                     gymId,
                     ...data,
                     ownerEmail: data.ownerEmail || undefined,
+                    googleMapsUrl: data.googleMapsUrl || undefined,
+                    image: data.image || undefined,
+                    description: data.description || undefined,
                 });
                 toast.success("Gym updated successfully");
                 router.back();
@@ -74,6 +77,9 @@ export default function EditGymPage() {
                                 description: gym.description || "",
                                 address: gym.address,
                                 location: gym.location,
+                                googleMapsUrl: gym.googleMapsUrl || "",
+                                image: gym.image || "",
+                                passPrice: gym.passPrice,
                                 ownerEmail: gym.ownerEmail || "",
                                 isActive: gym.isActive,
                             }}

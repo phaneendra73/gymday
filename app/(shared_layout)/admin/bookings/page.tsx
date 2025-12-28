@@ -2,17 +2,17 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Loader2, Calendar, MapPin, User, CheckCircle2, XCircle, Ticket } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Loader2, Calendar, MapPin, Ticket } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { formatINR } from "@/lib/utils";
 
 export default function AdminBookingsPage() {
     const bookings = useQuery(api.bookings.listAllBookings);
 
     if (bookings === undefined) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
+            <div className="flex items-center justify-center min-h-100">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         );
@@ -26,7 +26,10 @@ export default function AdminBookingsPage() {
                     <p className="text-muted-foreground mt-2 font-medium">History of all day-pass bookings across the platform.</p>
                 </div>
                 <div className="bg-primary/10 text-primary px-4 py-2 rounded-2xl border border-primary/20 text-sm font-bold">
-                    TOTAL REVENUE: ₹{(bookings.length * 499).toLocaleString()}
+                    {(() => {
+                        const totalRevenueCents = bookings.reduce((sum, b) => sum + (b.priceCents ?? b.gym?.passPrice ?? 0), 0);
+                        return `TOTAL REVENUE: ${formatINR(totalRevenueCents)}`;
+                    })()}
                 </div>
             </div>
 
@@ -35,7 +38,7 @@ export default function AdminBookingsPage() {
                     <div className="text-center py-20 bg-card/20 rounded-3xl border border-dotted border-white/10">
                         <Ticket className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
                         <h3 className="text-xl font-bold">No bookings found</h3>
-                        <p className="text-muted-foreground">The platform hasn't processed any passes yet.</p>
+                        <p className="text-muted-foreground">The platform hasn&apos;t processed any passes yet.</p>
                     </div>
                 ) : (
                     <div className="glass-premium rounded-3xl overflow-hidden shadow-2xl">
@@ -82,7 +85,7 @@ export default function AdminBookingsPage() {
                                                 </Badge>
                                             </td>
                                             <td className="px-6 py-4 text-right font-bold text-sm">
-                                                ₹{(booking.gym?.passPrice ?? 0) / 100}
+                                                {formatINR(booking.priceCents ?? booking.gym?.passPrice ?? 0)}
                                             </td>
                                         </tr>
                                     ))}

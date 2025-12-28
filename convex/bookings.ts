@@ -28,6 +28,7 @@ export const bookDayPass = mutation({
       userId: user._id,
       gymId: args.gymId,
       bookingDay: args.bookingDay,
+      priceCents: gym.passPrice ?? 0,
       status: "booked",
       createdAt: Date.now(),
     });
@@ -145,5 +146,45 @@ export const cancelBooking = mutation({
     await ctx.db.patch(args.bookingId, {
       status: "cancelled",
     });
+  },
+});
+
+export const ownerTodayStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getProfile(ctx);
+    if (!user) throw new Error("Unauthenticated");
+    if (!user.isAdmin && !user.isGYMOwner) throw new Error("Unauthorized");
+
+    const gyms = await ctx.db
+      .query("gyms")
+      .withIndex("by_owner", (q) => q.eq("ownerId", user._id))
+      .collect();
+
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    let totalToday = 0;
+    let checkedInToday = 0;
+    let payoutCents = 0;
+
+    for (const gym of gyms) {
+      const bookings = await ctx.db
+        .query("bookings")
+        .withIndex("by_gym_and_day", (q) => q.eq("gymId", gym._id).eq("bookingDay", todayStr))
+        .collect();
+
+      totalToday += bookings.length;
+      checkedInToday += bookings.filter((b) => b.status === "checked-in").length;
+      const defaultPrice = gym.passPrice ?? 0;
+      payoutCents += bookings
+        .filter((b) => b.status !== "cancelled")
+        .reduce((sum, b) => sum + (b.priceCents ?? defaultPrice), 0);
+    }
+
+    return { totalToday, checkedInToday, payoutCents };
   },
 });
